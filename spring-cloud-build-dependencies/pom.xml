@@ -1,75 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.springframework.cloud</groupId>
+	<artifactId>spring-cloud-build-dependencies</artifactId>
 	<version>1.3.3.BUILD-SNAPSHOT</version>
-	<artifactId>spring-cloud-dependencies-parent</artifactId>
+	<name>spring-cloud-build-tools</name>
 	<packaging>pom</packaging>
-	<name>spring-cloud-dependencies-parent</name>
-	<description>Spring Cloud Build Dependencies</description>
-	<url>https://projects.spring.io/spring-cloud/</url>
-	<organization>
-		<name>Pivotal Software, Inc.</name>
-		<url>https://www.spring.io</url>
-	</organization>
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
-			<comments>
-Copyright 2014-2015 the original author or authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-	http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-implied.
-
-See the License for the specific language governing permissions and
-limitations under the License.
-			</comments>
-		</license>
-	</licenses>
-	<scm>
-		<url>https://github.com/spring-cloud/spring-cloud-build</url>
-		<connection>scm:git:git://github.com/spring-cloud/spring-cloud-build.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com/spring-cloud/spring-cloud-build.git</developerConnection>
-		<tag>HEAD</tag>
-	</scm>
-	<developers>
-		<developer>
-			<id>dsyer</id>
-			<name>Dave Syer</name>
-			<email>dsyer at pivotal.io</email>
-			<organization>Pivotal Software, Inc.</organization>
-			<organizationUrl>http://www.spring.io</organizationUrl>
-			<roles>
-				<role>Project lead</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>sgibb</id>
-			<name>Spencer Gibb</name>
-			<email>sgibb at pivotal.io</email>
-			<organization>Pivotal Software, Inc.</organization>
-			<organizationUrl>http://www.spring.io</organizationUrl>
-			<roles>
-				<role>Project lead</role>
-			</roles>
-		</developer>
-	</developers>
-	<prerequisites>
-		<maven>3.0.0</maven>
-	</prerequisites>
+	<description>Spring Cloud Build Dependencies: an internal BOM for use with Spring Cloud projects. Use as a BOM or by inheriting from the spring-cloud build parent.</description>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-dependencies</artifactId>
+		<version>1.5.3.RELEASE</version>
+	</parent>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<lombok.version>1.16.14</lombok.version>
+		<spring-boot.version>${parent.version}</spring-boot.version>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-core</artifactId>
+				<version>${spring.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>commons-logging</groupId>
+						<artifactId>commons-logging</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<distributionManagement>
 		<downloadUrl>https://github.com/spring-cloud</downloadUrl>
 		<site>
@@ -189,29 +158,5 @@ limitations under the License.
 			</pluginRepositories>
 		</profile>
 	</profiles>
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-enforcer-plugin</artifactId>
-					<version>1.4.1</version>
-					<executions>
-						<execution>
-							<id>enforce-versions</id>
-							<goals>
-								<goal>enforce</goal>
-							</goals>
-						</execution>
-					</executions>
-					<configuration>
-						<fail>false</fail>
-						<rules>
-							<dependencyConvergence/>
-						</rules>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-	</build>
+
 </project>
