@@ -4,26 +4,32 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.springframework.cloud</groupId>
 	<artifactId>spring-cloud-build</artifactId>
-	<version>1.3.4.BUILD-SNAPSHOT</version>
+	<version>2.0.0.BUILD-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring Cloud Parent</name>
 	<description>Spring Cloud parent pom, managing plugins and dependencies for Spring Cloud projects</description>
 	<modules>
+		<module>docs</module>
 		<module>spring-cloud-build-dependencies</module>
 		<module>spring-cloud-dependencies-parent</module>
 		<module>spring-cloud-build-tools</module>
 	</modules>
 	<url>https://spring.io/spring-cloud</url>
 	<properties>
-		<java.version>1.7</java.version>
+		<java.version>1.8</java.version>
 		<resource.delimiter>@</resource.delimiter> <!-- delimiter that doesn't clash with Spring ${} placeholders -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+		<maven-eclipse-plugin.version>2.10</maven-eclipse-plugin.version>
+		<checkstyle.version>2.17</checkstyle.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<main.basedir>${basedir}</main.basedir>
 		<docs.main>${project.artifactId}</docs.main>
-		<spring-boot.version>1.5.4.RELEASE</spring-boot.version>
+		<spring-boot.version>2.0.0.M7</spring-boot.version>
+		<spring-cloud-build.version>2.0.0.BUILD-SNAPSHOT</spring-cloud-build.version>
+		<docs.resources.dir>${project.build.directory}/build-docs</docs.resources.dir>
 
 		<!-- Sonar -->
 		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
@@ -36,7 +42,7 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-build-dependencies</artifactId>
-				<version>1.3.4.BUILD-SNAPSHOT</version>
+				<version>${spring-cloud-build.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -175,6 +181,20 @@ limitations under the License.
 				<!-- Apply more sensible defaults for user projects -->
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-eclipse-plugin</artifactId>
+					<version>${maven-eclipse-plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<source>${maven.compiler.source}</source>
+						<target>${maven.compiler.target}</target>
+						<compilerArgument>-parameters</compilerArgument>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-failsafe-plugin</artifactId>
 					<executions>
 						<execution>
@@ -247,6 +267,33 @@ limitations under the License.
 						<useDefaultDelimiters>false</useDefaultDelimiters>
 					</configuration>
 				</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>${checkstyle.version}</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.springframework.cloud</groupId>
+						<artifactId>spring-cloud-build-tools</artifactId>
+						<version>${spring-cloud-build.version}</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<configLocation>checkstyle.xml</configLocation>
+					<headerLocation>LICENSE.txt</headerLocation>
+					<consoleOutput>true</consoleOutput>
+					<failsOnError>true</failsOnError>
+				</configuration>
+				<executions>
+					<execution>
+						<id>validate</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 				<plugin>
 					<groupId>pl.project13.maven</groupId>
 					<artifactId>git-commit-id-plugin</artifactId>
@@ -414,6 +461,9 @@ limitations under the License.
 					<snapshots>
 						<enabled>true</enabled>
 					</snapshots>
+					<releases>
+						<enabled>false</enabled>
+					</releases>
 				</repository>
 				<repository>
 					<id>spring-milestones</id>
@@ -440,11 +490,22 @@ limitations under the License.
 					<snapshots>
 						<enabled>true</enabled>
 					</snapshots>
+					<releases>
+						<enabled>false</enabled>
+					</releases>
 				</pluginRepository>
 				<pluginRepository>
 					<id>spring-milestones</id>
 					<name>Spring Milestones</name>
 					<url>https://repo.spring.io/libs-milestone-local</url>
+					<snapshots>
+						<enabled>false</enabled>
+					</snapshots>
+				</pluginRepository>
+				<pluginRepository>
+					<id>spring-releases</id>
+					<name>Spring Releases</name>
+					<url>https://repo.spring.io/libs-release-local</url>
 					<snapshots>
 						<enabled>false</enabled>
 					</snapshots>
@@ -508,6 +569,7 @@ limitations under the License.
 			</build>
 		</profile>
 		<profile>
+			<!-- TODO: remove this (it's covered with checkstyle, but not all projects use that yet -->
 			<id>imports</id>
 			<activation>
 				<os>
@@ -556,67 +618,183 @@ limitations under the License.
 			</build>
 		</profile>
 		<profile>
-			<id>java7</id>
-			<activation>
-				<file>
-					<missing>.jdk8</missing>
-				</file>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>animal-sniffer-maven-plugin</artifactId>
-						<version>1.14</version>
-						<configuration>
-							<signature>
-								<groupId>org.codehaus.mojo.signature</groupId>
-								<artifactId>java17</artifactId>
-								<version>1.0</version>
-							</signature>
-						</configuration>
-						<executions>
-							<execution>
-								<id>enforce-java-7</id>
-								<phase>test</phase>
-								<goals>
-									<goal>check</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
 			<id>docs</id>
 			<build>
 				<pluginManagement>
 					<plugins>
 						<plugin>
-							<groupId>org.asciidoctor</groupId>
-							<artifactId>asciidoctor-maven-plugin</artifactId>
-							<version>1.5.3</version>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-dependency-plugin</artifactId>
+							<version>3.0.0</version>
 							<executions>
 								<execution>
-									<id>generate-docs</id>
+									<id>unpack-docs</id>
+									<phase>generate-resources</phase>
+									<goals>
+										<goal>unpack</goal>
+									</goals>
+									<configuration>
+										<artifactItems>
+											<artifactItem>
+												<groupId>org.springframework.cloud</groupId>
+												<artifactId>spring-cloud-build-docs</artifactId>
+												<version>${spring-cloud-build.version}</version>
+												<classifier>sources</classifier>
+												<type>jar</type>
+												<overWrite>false</overWrite>
+												<outputDirectory>${docs.resources.dir}</outputDirectory>
+											</artifactItem>
+										</artifactItems>
+									</configuration>
+								</execution>
+							</executions>
+						</plugin>
+						<plugin>
+							<groupId>org.asciidoctor</groupId>
+							<artifactId>asciidoctor-maven-plugin</artifactId>
+							<version>1.5.5</version>
+							<dependencies>
+								<dependency>
+									<groupId>io.spring.asciidoctor</groupId>
+									<artifactId>spring-asciidoctor-extensions</artifactId>
+									<version>0.1.0.RELEASE</version>
+								</dependency>
+							</dependencies>
+							<executions>
+								<execution>
+									<id>generate-docbook</id>
+									<phase>prepare-package</phase>
+									<goals>
+										<goal>process-asciidoc</goal>
+									</goals>
+									<configuration>
+										<sourceDocumentName>${docs.main}.adoc</sourceDocumentName>
+										<backend>docbook5</backend>
+										<doctype>book</doctype>
+										<attributes>
+											<docinfo>true</docinfo>
+											<spring-boot-docs-version>${spring-boot.version}</spring-boot-docs-version>
+											<spring-cloud-version>${project.version}</spring-cloud-version>
+											<allow-uri-read>true</allow-uri-read>
+											<safe-mode>unsafe</safe-mode>
+										</attributes>
+									</configuration>
+								</execution>
+								<execution>
+									<id>generate-index</id>
 									<phase>process-resources</phase>
 									<goals>
 										<goal>process-asciidoc</goal>
 									</goals>
 									<configuration>
 										<sourceDocumentName>${docs.main}.adoc</sourceDocumentName>
+										<sourceDirectory>${basedir}/target/generated-index/</sourceDirectory>
 										<backend>html</backend>
 										<doctype>article</doctype>
 										<attributes>
 											<docinfo>true</docinfo>
 											<spring-cloud-version>${project.version}</spring-cloud-version>
 											<allow-uri-read>true</allow-uri-read>
+											<safe-mode>unsafe</safe-mode>
 											<source-highlighter>prettify</source-highlighter>
+											<docs-main>${docs.main}</docs-main>
 										</attributes>
 									</configuration>
 								</execution>
 							</executions>
+						</plugin>
+						<plugin>
+							<groupId>com.agilejava.docbkx</groupId>
+							<artifactId>docbkx-maven-plugin</artifactId>
+							<version>2.0.15</version>
+							<configuration>
+								<sourceDirectory>${basedir}/target/generated-docs</sourceDirectory>
+								<includes>${docs.main}.xml</includes>
+								<xincludeSupported>true</xincludeSupported>
+								<chunkedOutput>false</chunkedOutput>
+								<foCustomization>${docs.resources.dir}/docbook/xsl/pdf.xsl</foCustomization>
+								<useExtensions>1</useExtensions>
+								<highlightSource>1</highlightSource>
+								<highlightXslthlConfig>${docs.resources.dir}/docbook/xsl/xslthl-config.xml</highlightXslthlConfig>
+							</configuration>
+							<dependencies>
+								<dependency>
+									<groupId>net.sf.xslthl</groupId>
+									<artifactId>xslthl</artifactId>
+									<version>2.1.0</version>
+								</dependency>
+								<dependency>
+									<groupId>net.sf.docbook</groupId>
+									<artifactId>docbook-xml</artifactId>
+									<version>5.0-all</version>
+									<classifier>resources</classifier>
+									<type>zip</type>
+									<scope>runtime</scope>
+								</dependency>
+							</dependencies>
+							<executions>
+								<execution>
+									<id>html-single</id>
+									<goals>
+										<goal>generate-html</goal>
+									</goals>
+									<phase>prepare-package</phase>
+									<configuration>
+										<htmlCustomization>${docs.resources.dir}/docbook/xsl/html-singlepage.xsl</htmlCustomization>
+										<targetDirectory>${basedir}/target/docbook/htmlsingle</targetDirectory>
+										<postProcess>
+											<copy todir="${basedir}/target/contents/reference/htmlsingle">
+												<fileset dir="${basedir}/target/docbook/htmlsingle">
+													<include name="**/*.html" />
+												</fileset>
+											</copy>
+											<copy todir="${basedir}/target/contents/reference/htmlsingle">
+												<fileset dir="${docs.resources.dir}/docbook">
+													<include name="**/*.css" />
+													<include name="**/*.png" />
+													<include name="**/*.gif" />
+													<include name="**/*.jpg" />
+												</fileset>
+											</copy>
+										</postProcess>
+									</configuration>
+								</execution>
+								<execution>
+									<id>html</id>
+									<goals>
+										<goal>generate-html</goal>
+									</goals>
+									<phase>prepare-package</phase>
+									<configuration>
+										<htmlCustomization>${docs.resources.dir}/docbook/xsl/html-multipage.xsl</htmlCustomization>
+										<targetDirectory>${basedir}/target/docbook/html</targetDirectory>
+										<!-- By default `-` prefix is added to files and gh-pages don't render these files -->
+										<chunkedFilenamePrefix>multi_</chunkedFilenamePrefix>
+										<chunkedOutput>true</chunkedOutput>
+										<postProcess>
+											<copy todir="${basedir}/target/contents/reference/html">
+												<fileset dir="${basedir}/target/docbook/html">
+													<include name="**/*.html" />
+												</fileset>
+											</copy>
+											<copy todir="${basedir}/target/contents/reference/html">
+												<fileset dir="${docs.resources.dir}/docbook">
+													<include name="**/*.css" />
+													<include name="**/*.png" />
+													<include name="**/*.gif" />
+													<include name="**/*.jpg" />
+												</fileset>
+											</copy>
+										</postProcess>
+									</configuration>
+								</execution>
+							</executions>
+						</plugin>
+						<plugin>
+							<groupId>org.codehaus.mojo</groupId>
+							<artifactId>build-helper-maven-plugin</artifactId>
+							<version>1.12</version>
+							<inherited>false</inherited>
 						</plugin>
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
@@ -664,7 +842,7 @@ limitations under the License.
 									<configuration>
 										<target>
 											<java classname="org.jruby.Main" failonerror="yes">
-												<arg value="${basedir}/src/main/ruby/generate_readme.sh"/>
+												<arg value="${docs.resources.dir}/ruby/generate_readme.sh"/>
 												<arg value="-o"/>
 												<arg value="${main.basedir}/README.adoc"/>
 											</java>
@@ -672,18 +850,62 @@ limitations under the License.
 									</configuration>
 								</execution>
 								<execution>
-									<id>package-and-attach-docs-zip</id>
-									<phase>package</phase>
+									<id>copy-css</id>
+									<phase>process-resources</phase>
 									<goals>
 										<goal>run</goal>
 									</goals>
 									<configuration>
 										<target>
-											<zip
-													destfile="${project.build.directory}/${project.artifactId}-${project.version}.zip">
-												<fileset dir="${project.build.directory}/generated-docs"
-														 excludes="*.sh"/>
-											</zip>
+											<copy todir="${basedir}/target/generated-docs/css">
+												<fileset dir="${docs.resources.dir}/docbook/css"/>
+											</copy>
+											<copy failonerror="false" todir="${basedir}/target/generated-docs/images">
+												<fileset dir="${docs.resources.dir}/docbook/images"/>
+											</copy>
+										</target>
+									</configuration>
+								</execution>
+								<execution>
+									<id>generate-documentation-index</id>
+									<phase>generate-resources</phase>
+									<goals>
+										<goal>run</goal>
+									</goals>
+									<configuration>
+										<target>
+											<echo file="${basedir}/target/generated-index/${docs.main}.adoc">
+:nofooter:
+:linkcss:
+:stylesdir: css
+:stylesheet: manual-singlepage.css
+
+= {docs-main}
+
+{spring-cloud-version}
+
+== Pick The Documentation Option
+
+- link:single/{docs-main}.html[Single HTML]
+- link:multi/multi_{docs-main}.html[Multi HTML]
+											</echo>
+										</target>
+									</configuration>
+								</execution>
+								<execution>
+									<id>copy-generated-html</id>
+									<phase>prepare-package</phase>
+									<goals>
+										<goal>run</goal>
+									</goals>
+									<configuration>
+										<target>
+											<copy todir="${basedir}/target/generated-docs/single">
+												<fileset dir="${basedir}/target/contents/reference/htmlsingle"/>
+											</copy>
+											<copy todir="${basedir}/target/generated-docs/multi">
+												<fileset dir="${basedir}/target/contents/reference/html"/>
+											</copy>
 										</target>
 									</configuration>
 								</execution>
@@ -742,30 +964,6 @@ limitations under the License.
 											<repoKey>libs-release-local</repoKey>
 											<snapshotRepoKey>libs-snapshots-local</snapshotRepoKey>
 										</publisher>
-									</configuration>
-								</execution>
-							</executions>
-						</plugin>
-						<plugin>
-							<groupId>org.codehaus.mojo</groupId>
-							<artifactId>build-helper-maven-plugin</artifactId>
-							<version>3.0.0</version>
-							<executions>
-								<execution>
-									<id>attach-zip</id>
-									<goals>
-										<goal>attach-artifact</goal>
-									</goals>
-									<configuration>
-										<skipAttach>true</skipAttach>
-										<artifacts>
-											<artifact>
-												<file>
-													${project.build.directory}/${project.artifactId}-${project.version}.zip
-												</file>
-												<type>zip</type>
-											</artifact>
-										</artifacts>
 									</configuration>
 								</execution>
 							</executions>
